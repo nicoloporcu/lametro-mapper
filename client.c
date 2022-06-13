@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     // Send HTTP Request
     char request[1000];
     snprintf(request,sizeof(request),
-        "GET /info/lametro-rail HTTP/1.0\r\n"
+        "GET /real-time/lametro-rail/gtfs-rt-trip-updates?format=human HTTP/1.0\r\n"
         "Host: %s:%d\r\n"
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
