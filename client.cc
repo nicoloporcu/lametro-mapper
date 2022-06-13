@@ -30,7 +30,7 @@ bool HttpRequester::init(){
     // Create a socket for TCP connection
     if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
         return die("socket failed");
-    } //mak change
+    } 
 
     // Construct a server address structure
     memset(&servaddr, 0, sizeof(servaddr)); //zero out structure
@@ -56,7 +56,7 @@ bool HttpRequester::init(){
 }
 
 bool HttpRequester::sendGetRequest(char  request_url[], FILE * response_message){
-        // Send HTTP Request
+    // Send HTTP Request
     char request[1000];
     snprintf(request,sizeof(request),
         request_url, serverName, port, key);
@@ -80,12 +80,12 @@ bool HttpRequester::sendGetRequest(char  request_url[], FILE * response_message)
 
     // Write to file
     char buf[4096];
-    size_t r; //, limit;
+    size_t r; // limit;
 
     while((r = fread(buf, 1, sizeof(buf), response)) > 0 ) {
-        if(r == sizeof(buf)) { //read full buf
+        if(r == sizeof(buf)) { // read full buf
             fwrite(buf, sizeof(buf), 1, response_message);
-        } else { //read partial buf
+        } else { // read partial buf
             fwrite(buf, r, 1, response_message);
         }
     }
@@ -94,7 +94,8 @@ bool HttpRequester::sendGetRequest(char  request_url[], FILE * response_message)
 
 bool HttpRequester::getGeneralInfo( FILE * outfile){
     init();
-    char in_url [1000] =  "GET /info/lametro-rail HTTP/1.0\r\n"
+    char in_url [1000] = 
+        "GET /info/lametro-rail HTTP/1.0\r\n"
         "Host: %s:%d\r\n"
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
@@ -104,7 +105,41 @@ bool HttpRequester::getGeneralInfo( FILE * outfile){
 
 bool HttpRequester::getRoutesInfo(FILE * outfile){
     init();
-    char in_url [1000] =  "GET /info/lametro-rail/routes HTTP/1.0\r\n"
+    char in_url [1000] = 
+        "GET /info/lametro-rail/routes HTTP/1.0\r\n"
+        "Host: %s:%d\r\n"
+        "Authorization: %s\r\n"
+        "Content-Type: application/json\r\n"
+        "\r\n";
+    return sendGetRequest(in_url, outfile);
+}
+
+bool HttpRequester::getAlertsGTFS(FILE * outfile){
+    init();
+    char in_url [1000] = 
+        "GET /real-time/lametro-rail/gtfs-rt-alerts HTTP/1.0\r\n"
+        "Host: %s:%d\r\n"
+        "Authorization: %s\r\n"
+        "Content-Type: application/json\r\n"
+        "\r\n";
+    return sendGetRequest(in_url, outfile);
+}
+
+bool HttpRequester::getTripUpdatesGTFS(FILE * outfile){
+    init();
+    char in_url [1000] = 
+        "GET /real-time/lametro-rail/gtfs-rt-trip-updates HTTP/1.0\r\n"
+        "Host: %s:%d\r\n"
+        "Authorization: %s\r\n"
+        "Content-Type: application/json\r\n"
+        "\r\n";
+    return sendGetRequest(in_url, outfile);
+}
+
+bool HttpRequester::getVehiclePositionsGTFS(FILE * outfile){
+    init();
+    char in_url [1000] = 
+        "GET /real-time/lametro-rail/gtfs-rt-vehicle-positions HTTP/1.0\r\n"
         "Host: %s:%d\r\n"
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
@@ -115,10 +150,6 @@ bool HttpRequester::getRoutesInfo(FILE * outfile){
 bool HttpRequester::teardown(){
     return close(sock); 
 }
-
-
-
-
 
 int main(int argc, char **argv) {
 
