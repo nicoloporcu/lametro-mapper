@@ -9,6 +9,9 @@ class HttpRequester{
         bool sendGetRequest(char * request, FILE * response_message);
         bool getGeneralInfo(FILE * response_message);
         bool getRoutesInfo(FILE* response_message);
+        bool getVehiclePositionsGTFS(FILE * outfile);
+        bool getTripUpdatesGTFS(FILE * outfile);
+        bool getAlertsGTFS(FILE * outfile);
         bool die(const char *s);
     
     private:
