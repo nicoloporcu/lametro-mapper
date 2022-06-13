@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -9,73 +8,73 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include "client.h"
-//
+#include <system_error>
+#include <fstream>
+#include <iostream>
+#include <format>
+
 #define SWIFT_API "api.goswift.ly"
 #define PORT 80
 
-bool HttpRequester::die(const char *s) {
-    perror(s);
-    return false;
-}
+#define die(msg) \
+    throw std::system_error(errno, std::generic_category(), msg)
 
-HttpRequester::HttpRequester():serverName(SWIFT_API), port(PORT), initialized(false){}
+HttpRequester::HttpRequester():serverName(SWIFT_API), port(PORT){}
 
+// TODO: what is the design decision behind not doing this in the constructor?
 bool HttpRequester::init(){
-    // get sever ip from server name
-    if((he = gethostbyname(serverName)) == NULL) {
+    // GET HOST BY NAME
+    struct hostent *he;
+    if ((he = gethostbyname(serverName.c_str())) == NULL)
         die("gethostbyname failed");
-    }
+    
     ip = inet_ntoa(*(struct in_addr *)he->h_addr);
     
-    // Create a socket for TCP connection
-    if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
-        return die("socket failed");
-    } 
+    // SOCKET
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
+        die("socket failed");
 
-    // Construct a server address structure
-    memset(&servaddr, 0, sizeof(servaddr)); //zero out structure
+    // CONNECT
+    struct sockaddr_in servaddr;
+    memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr(ip);
-    servaddr.sin_port = htons(port); //network byte order
+    servaddr.sin_addr.s_addr = inet_addr(ip.c_str());
+    servaddr.sin_port = htons(port);
 
-    //Establish TCP connection to server
-    if(connect(sock, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
-        return die("connect failed");
-    }
+    if(connect(sock, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)
+        die("connect failed");
 
-    //GET KEY
-    FILE *keyfile = fopen("key.txt", "r");
+    // GET KEY
+    std::ifstream keyfile("key.txt", 0 );
     if(!keyfile)
-        return die("fopen key.txt failed");
+        die("open key.txt failed");
 
-    if (fgets(key, sizeof(key), keyfile) == NULL)
-        return die("get key failed");
-    fclose(keyfile);
+    std::getline(keyfile, key);
+    if(keyfile.bad())
+        die("get key failed");
+
+    keyfile.close();
     
     return true;
 }
 
-bool HttpRequester::sendGetRequest(char  request_url[], FILE * response_message){
-    // Send HTTP Request
-    char request[1000];
-    snprintf(request,sizeof(request),
-        request_url, serverName, port, key);
-        
-    if(send(sock, &request, strlen(request), 0) != strlen(request)) {
-        return die("send HTTP request failed");
-    }
+bool HttpRequester::sendGetRequest(char *request, FILE * response_message){
+    std::cout << request << std::endl;
+    // SEND REQUEST
+    if(send(sock, &request, strlen(request), 0) != strlen(request))
+        die("send HTTP request failed");
 
     // Wrap socket
     FILE *response;
     if((response = fdopen(sock, "r")) == NULL ) {
-        return die("fdopen failed");
+        die("fdopen failed");
     }
 
     char headers[1000];
     // print headers
-    while((fgets(headers, sizeof(headers), response) !=NULL && headers[0] != '\r')) {
+    while((fgets(headers, sizeof(headers), response) !=NULL && headers[0] != '\r'))
         printf("%s", headers);
-    }
+
     printf("\n");
 
     // Write to file
@@ -92,59 +91,66 @@ bool HttpRequester::sendGetRequest(char  request_url[], FILE * response_message)
     return true;
 }
 
-bool HttpRequester::getGeneralInfo( FILE * outfile){
+bool HttpRequester::getGeneralInfo(FILE * outfile){
     init();
-    char in_url [1000] = 
+    char request[1000];
+    snprintf(request, sizeof(request),
         "GET /info/lametro-rail HTTP/1.0\r\n"
         "Host: %s:%d\r\n"
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
-        "\r\n";
-    return sendGetRequest(in_url, outfile);
+        "\r\n", serverName.c_str(), port, key.c_str());
+
+    return sendGetRequest(request, outfile);
 }
 
 bool HttpRequester::getRoutesInfo(FILE * outfile){
     init();
-    char in_url [1000] = 
+    char request[1000];
+    snprintf(request, sizeof(request),
         "GET /info/lametro-rail/routes HTTP/1.0\r\n"
         "Host: %s:%d\r\n"
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
-        "\r\n";
-    return sendGetRequest(in_url, outfile);
+        "\r\n", serverName.c_str(), port, key.c_str());
+
+    return sendGetRequest(request, outfile);
 }
 
 bool HttpRequester::getAlertsGTFS(FILE * outfile){
     init();
-    char in_url [1000] = 
+    char request[1000];
+    snprintf(request, sizeof(request),
         "GET /real-time/lametro-rail/gtfs-rt-alerts HTTP/1.0\r\n"
         "Host: %s:%d\r\n"
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
-        "\r\n";
-    return sendGetRequest(in_url, outfile);
+        "\r\n", serverName.c_str(), port, key.c_str());
+    return sendGetRequest(request, outfile);
 }
 
 bool HttpRequester::getTripUpdatesGTFS(FILE * outfile){
     init();
-    char in_url [1000] = 
+    char request[1000];
+    snprintf(request, sizeof(request),
         "GET /real-time/lametro-rail/gtfs-rt-trip-updates HTTP/1.0\r\n"
         "Host: %s:%d\r\n"
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
-        "\r\n";
-    return sendGetRequest(in_url, outfile);
+        "\r\n", serverName.c_str(), port, key.c_str());
+    return sendGetRequest(request, outfile);
 }
 
 bool HttpRequester::getVehiclePositionsGTFS(FILE * outfile){
     init();
-    char in_url [1000] = 
+    char request[1000];
+    snprintf(request, sizeof(request),
         "GET /real-time/lametro-rail/gtfs-rt-vehicle-positions HTTP/1.0\r\n"
         "Host: %s:%d\r\n"
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
-        "\r\n";
-    return sendGetRequest(in_url, outfile);
+        "\r\n", serverName.c_str(), port, key.c_str());
+    return sendGetRequest(request, outfile);
 }
 
 bool HttpRequester::teardown(){
