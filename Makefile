@@ -1,3 +1,3 @@
-CC = gcc
+CC = g++
 
 client:
