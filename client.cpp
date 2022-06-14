@@ -10,7 +10,6 @@
 
 #include <system_error>
 #include <iostream>
-#include <format>
 #include "client.h"
 
 #define die(msg) \
