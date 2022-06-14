@@ -58,8 +58,9 @@ bool Client::getRoutesInfo(){
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
         "\r\n", serverName.c_str(), port, key.c_str());
+    bool res = get(request);
     teardown();
-    return get(request);
+    return res;
 }
 
 bool Client::getAlertsGTFS(bool human){
@@ -72,8 +73,9 @@ bool Client::getAlertsGTFS(bool human){
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
         "\r\n", format, serverName.c_str(), port, key.c_str());
+    bool res = get(request);
     teardown();
-    return get(request);
+    return res;
 }
 
 bool Client::getTripUpdatesGTFS(bool human){
@@ -87,8 +89,9 @@ bool Client::getTripUpdatesGTFS(bool human){
         "Content-Type: application/json\r\n"
         "\r\n", format, serverName.c_str(), port, key.c_str());
     std::cout << request << std::endl;
+    bool res = get(request);
     teardown();
-    return get(request);
+    return res;
 }
 
 bool Client::getVehiclePositionsGTFS(bool human){
@@ -101,8 +104,9 @@ bool Client::getVehiclePositionsGTFS(bool human){
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
         "\r\n", format, serverName.c_str(), port, key.c_str());
+    bool res = get(request);
     teardown();
-    return get(request);
+    return res;
 }
 
 ///////////// PRIVATE METHODS //////////////
@@ -112,6 +116,7 @@ bool Client::init(){
     struct hostent *he;
     if ((he = gethostbyname(serverName.c_str())) == NULL)
         die("gethostbyname failed");
+    char *ip = inet_ntoa(*(struct in_addr *)he->h_addr);
     
     // SOCKET
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
@@ -121,7 +126,7 @@ bool Client::init(){
     struct sockaddr_in servaddr;
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = (*(struct in_addr *)he->h_addr).s_addr;
+    servaddr.sin_addr.s_addr = inet_addr(ip);
     servaddr.sin_port = htons(port);
 
     if(connect(sock, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)

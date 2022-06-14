@@ -1,3 +1,4 @@
 key.txt
-client
+main
 *.json
+*.o
