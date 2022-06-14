@@ -7,9 +7,9 @@ class Client{
         ~Client() = default;
         bool getGeneralInfo();
         bool getRoutesInfo();
-        bool getVehiclePositionsGTFS();
-        bool getTripUpdatesGTFS();
-        bool getAlertsGTFS();
+        bool getVehiclePositionsGTFS(bool human);
+        bool getTripUpdatesGTFS(bool human);
+        bool getAlertsGTFS(bool human);
     
     private:
         std::string serverName;

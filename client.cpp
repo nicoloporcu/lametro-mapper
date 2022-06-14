@@ -62,39 +62,42 @@ bool Client::getRoutesInfo(){
     return get(request);
 }
 
-bool Client::getAlertsGTFS(){
+bool Client::getAlertsGTFS(bool human){
     init();
+    const char *format = human ? "?format=human" : "";
     char request[1000];
     snprintf(request, sizeof(request),
-        "GET /real-time/lametro-rail/gtfs-rt-alerts HTTP/1.0\r\n"
+        "GET /real-time/lametro-rail/gtfs-rt-alerts%s HTTP/1.0\r\n"
         "Host: %s:%d\r\n"
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
-        "\r\n", serverName.c_str(), port, key.c_str());
+        "\r\n", format, serverName.c_str(), port, key.c_str());
     return get(request);
 }
 
-bool Client::getTripUpdatesGTFS(){
+bool Client::getTripUpdatesGTFS(bool human){
     init();
     char request[1000];
+    const char *format = human ? "?format=human" : "";
     snprintf(request, sizeof(request),
-        "GET /real-time/lametro-rail/gtfs-rt-trip-updates HTTP/1.0\r\n"
+        "GET /real-time/lametro-rail/gtfs-rt-trip-updates%s HTTP/1.0\r\n"
         "Host: %s:%d\r\n"
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
-        "\r\n", serverName.c_str(), port, key.c_str());
+        "\r\n", format, serverName.c_str(), port, key.c_str());
     return get(request);
 }
 
-bool Client::getVehiclePositionsGTFS(){
+bool Client::getVehiclePositionsGTFS(bool human){
     init();
     char request[1000];
+    const char *format = human ? "?format=human" : "";
     snprintf(request, sizeof(request),
-        "GET /real-time/lametro-rail/gtfs-rt-vehicle-positions HTTP/1.0\r\n"
+        "GET /real-time/lametro-rail/gtfs-rt-vehicle-positions%s HTTP/1.0\r\n"
         "Host: %s:%d\r\n"
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
-        "\r\n", serverName.c_str(), port, key.c_str());
+        "\r\n", format, serverName.c_str(), port, key.c_str());
     return get(request);
 }
 
