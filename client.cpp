@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+#include <string.h>
 #include <cstdio>
 
 #include <system_error>
@@ -19,7 +20,7 @@ Client::Client(const char *outfile){
     serverName = "api.goswift.ly";
     port = 80;
 
-    std::ifstream keyfile("key.txt", 0 );
+    std::ifstream keyfile("key.txt", std::ios::in );
     if(!keyfile)
         die("open key.txt failed");
 
