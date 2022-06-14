@@ -154,11 +154,12 @@ bool Client::get(char *request){
     std::cout << std::endl;
 
     // WRITE RESPONSE TO FILE
-    int n;
-    while((n = fread(buffer, 1, sizeof(buffer), fp) > 0)){
-        file.write(buffer, n);
+    char buf[4096];
+    size_t n;
+
+    while((n = fread(buf, 1, sizeof(buf), fp)) > 0 ) {
+        file.write(buf, n);
     }
-    file << std::endl;
 
     return true;
 }
