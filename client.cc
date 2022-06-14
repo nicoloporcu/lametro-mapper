@@ -11,7 +11,6 @@
 #include <system_error>
 #include <fstream>
 #include <iostream>
-#include <format>
 
 #define SWIFT_API "api.goswift.ly"
 #define PORT 80
@@ -45,7 +44,7 @@ bool HttpRequester::init(){
         die("connect failed");
 
     // GET KEY
-    std::ifstream keyfile("key.txt", 0 );
+    std::ifstream keyfile("key.txt", std::ios::in);
     if(!keyfile)
         die("open key.txt failed");
 
@@ -58,10 +57,9 @@ bool HttpRequester::init(){
     return true;
 }
 
-bool HttpRequester::sendGetRequest(char *request, FILE * response_message){
-    std::cout << request << std::endl;
+bool HttpRequester::sendGetRequest(char *req, FILE *response_message){
     // SEND REQUEST
-    if(send(sock, &request, strlen(request), 0) != strlen(request))
+    if(send(sock, req, strlen(req), 0) != strlen(req))
         die("send HTTP request failed");
 
     // Wrap socket
@@ -101,7 +99,9 @@ bool HttpRequester::getGeneralInfo(FILE * outfile){
         "Content-Type: application/json\r\n"
         "\r\n", serverName.c_str(), port, key.c_str());
 
-    return sendGetRequest(request, outfile);
+    bool res = sendGetRequest(request, outfile);
+    teardown();
+    return res;
 }
 
 bool HttpRequester::getRoutesInfo(FILE * outfile){
@@ -162,9 +162,9 @@ int main(int argc, char **argv) {
     FILE * outfile = fopen("results.json", "w");;
     HttpRequester requester;
     requester.getGeneralInfo(outfile);
-    fprintf(outfile,"\n");
-    requester.getRoutesInfo(outfile);
-    fprintf(outfile,"\n");
+    //fprintf(outfile,"\n");
+    //requester.getRoutesInfo(outfile);
+    //fprintf(outfile,"\n");
 
     fclose(outfile);
 }
