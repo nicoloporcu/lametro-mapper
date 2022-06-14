@@ -58,7 +58,7 @@ bool Client::getRoutesInfo(){
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
         "\r\n", serverName.c_str(), port, key.c_str());
-
+    teardown();
     return get(request);
 }
 
@@ -72,6 +72,7 @@ bool Client::getAlertsGTFS(bool human){
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
         "\r\n", format, serverName.c_str(), port, key.c_str());
+    teardown();
     return get(request);
 }
 
@@ -85,6 +86,8 @@ bool Client::getTripUpdatesGTFS(bool human){
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
         "\r\n", format, serverName.c_str(), port, key.c_str());
+    std::cout << request << std::endl;
+    teardown();
     return get(request);
 }
 
@@ -98,6 +101,7 @@ bool Client::getVehiclePositionsGTFS(bool human){
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
         "\r\n", format, serverName.c_str(), port, key.c_str());
+    teardown();
     return get(request);
 }
 

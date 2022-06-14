@@ -4,7 +4,9 @@ int main(int argc, char **argv) {
 
     Client clnt { "results.json" };
 
-    clnt.getGeneralInfo();
+    // clnt.getGeneralInfo();
 
-    clnt.getRoutesInfo();
+    // clnt.getRoutesInfo();
+
+    clnt.getTripUpdatesGTFS(true);
 }
