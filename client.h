@@ -1,23 +1,24 @@
-#include <arpa/inet.h>
-#include <stdio.h>
 #include <string>
+#include <fstream>
 
-class HttpRequester{
+class Client{
     public:
-        HttpRequester();
-        bool init();
-        bool teardown();
-        bool sendGetRequest(char *request, FILE * response_message);
-        bool getGeneralInfo(FILE * response_message);
-        bool getRoutesInfo(FILE* response_message);
-        bool getVehiclePositionsGTFS(FILE * outfile);
-        bool getTripUpdatesGTFS(FILE * outfile);
-        bool getAlertsGTFS(FILE * outfile);
+        Client(const char *outfile);
+        ~Client() = default;
+        bool getGeneralInfo();
+        bool getRoutesInfo();
+        bool getVehiclePositionsGTFS();
+        bool getTripUpdatesGTFS();
+        bool getAlertsGTFS();
     
     private:
         std::string serverName;
         unsigned short port;
+        std::ofstream file;
         std::string key;
-        std::string ip;
-        int sock;  
+        int sock;
+
+        bool get(char *request);
+        bool init();
+        bool teardown();
 };
