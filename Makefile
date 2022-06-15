@@ -9,6 +9,8 @@ main.o: client.h
 
 client.o: 
 
+gtfs-realtime.pb.o: 
+
 .PHONY: clean
 clean:
 	rm -f *.o main
