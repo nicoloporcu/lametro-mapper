@@ -161,11 +161,8 @@ bool Client::get(char *request){
     uint32_t siz = 8184;
     char buf[siz];
     size_t n;
-    int i = 0;
     while((n = fread(buf, 1, sizeof(buf), fp)) > 0 ) {
         file.write(buf, n);
-        printf("%d\n", i);
-        ++i;
     }
 
     google::protobuf::io::ArrayInputStream ais(buffer,siz);
