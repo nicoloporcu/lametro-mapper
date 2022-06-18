@@ -1,5 +1,6 @@
 #include <string>
 #include <fstream>
+#include "gtfs-realtime.pb.h"
 
 class Client{
     public:

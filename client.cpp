@@ -12,6 +12,8 @@
 #include <system_error>
 #include <iostream>
 #include "client.h"
+#include "gtfs-realtime.pb.h"
+
 
 #define die(msg) \
     throw std::system_error(errno, std::generic_category(), msg)
@@ -137,6 +139,8 @@ bool Client::init(){
 
 
 bool Client::get(char *request){
+
+    transit_realtime::FeedMessage message;
     // SEND REQUEST
     if(send(sock, request, strlen(request), 0) != strlen(request))
         die("send HTTP request failed");
@@ -154,12 +158,31 @@ bool Client::get(char *request){
     std::cout << std::endl;
 
     // WRITE RESPONSE TO FILE
-    char buf[4096];
+    uint32_t siz = 8184;
+    char buf[siz];
     size_t n;
-
+    int i = 0;
     while((n = fread(buf, 1, sizeof(buf), fp)) > 0 ) {
         file.write(buf, n);
+        printf("%d\n", i);
+        ++i;
     }
+
+    google::protobuf::io::ArrayInputStream ais(buffer,siz);
+    google::protobuf::io::CodedInputStream coded_input(&ais);
+    //Read an unsigned integer with Varint encoding, truncating to 32 bits.
+    coded_input.ReadVarint32(&siz);
+    //After the message's length is read, PushLimit() is used to prevent the CodedInputStream 
+    //from reading beyond that length.Limits are used when parsing length-delimited 
+    //embedded messages
+    google::protobuf::io::CodedInputStream::Limit msgLimit = coded_input.PushLimit(siz);
+    //De-Serialize
+    message.ParseFromCodedStream(&coded_input);
+    //Once the embedded message has been parsed, PopLimit() is called to undo the limit
+    coded_input.PopLimit(msgLimit);
+    //Print the message
+    std::cout<<"Message is "<<message.DebugString();
+    message.ParseFromCodedStream(&coded_input);
 
     return true;
 }
