@@ -5,15 +5,13 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-
+#undef NO_DATA
 #include <string.h>
 #include <cstdio>
-
 #include <system_error>
 #include <iostream>
 #include "client.h"
-#include "gtfs-realtime.pb.h"
-
+#include <string>
 
 #define die(msg) \
     throw std::system_error(errno, std::generic_category(), msg)
@@ -65,7 +63,7 @@ bool Client::getRoutesInfo(){
     return res;
 }
 
-bool Client::getAlertsGTFS(bool human){
+bool Client::getAlertsGTFS(bool human, transit_realtime::FeedMessage * message){
     init();
     const char *format = human ? "?format=human" : "";
     char request[1000];
@@ -75,12 +73,12 @@ bool Client::getAlertsGTFS(bool human){
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
         "\r\n", format, serverName.c_str(), port, key.c_str());
-    bool res = get(request);
+    bool res = getProto(request, message);
     teardown();
     return res;
 }
 
-bool Client::getTripUpdatesGTFS(bool human){
+bool Client::getTripUpdatesGTFS(bool human, transit_realtime::FeedMessage * message){
     init();
     char request[1000];
     const char *format = human ? "?format=human" : "";
@@ -91,12 +89,12 @@ bool Client::getTripUpdatesGTFS(bool human){
         "Content-Type: application/json\r\n"
         "\r\n", format, serverName.c_str(), port, key.c_str());
     std::cout << request << std::endl;
-    bool res = get(request);
+    bool res = getProto(request, message);
     teardown();
     return res;
 }
 
-bool Client::getVehiclePositionsGTFS(bool human){
+bool Client::getVehiclePositionsGTFS(bool human, transit_realtime::FeedMessage * message){
     init();
     char request[1000];
     const char *format = human ? "?format=human" : "";
@@ -106,7 +104,7 @@ bool Client::getVehiclePositionsGTFS(bool human){
         "Authorization: %s\r\n"
         "Content-Type: application/json\r\n"
         "\r\n", format, serverName.c_str(), port, key.c_str());
-    bool res = get(request);
+    bool res = getProto(request, message);
     teardown();
     return res;
 }
@@ -140,7 +138,6 @@ bool Client::init(){
 
 bool Client::get(char *request){
 
-    transit_realtime::FeedMessage message;
     // SEND REQUEST
     if(send(sock, request, strlen(request), 0) != strlen(request))
         die("send HTTP request failed");
@@ -158,31 +155,48 @@ bool Client::get(char *request){
     std::cout << std::endl;
 
     // WRITE RESPONSE TO FILE
-    uint32_t siz = 8184;
+    uint32_t siz = 4000;
     char buf[siz];
     size_t n;
     while((n = fread(buf, 1, sizeof(buf), fp)) > 0 ) {
-        file.write(buf, n);
-    }
-
-    google::protobuf::io::ArrayInputStream ais(buffer,siz);
-    google::protobuf::io::CodedInputStream coded_input(&ais);
-    //Read an unsigned integer with Varint encoding, truncating to 32 bits.
-    coded_input.ReadVarint32(&siz);
-    //After the message's length is read, PushLimit() is used to prevent the CodedInputStream 
-    //from reading beyond that length.Limits are used when parsing length-delimited 
-    //embedded messages
-    google::protobuf::io::CodedInputStream::Limit msgLimit = coded_input.PushLimit(siz);
-    //De-Serialize
-    message.ParseFromCodedStream(&coded_input);
-    //Once the embedded message has been parsed, PopLimit() is called to undo the limit
-    coded_input.PopLimit(msgLimit);
-    //Print the message
-    std::cout<<"Message is "<<message.DebugString();
-    message.ParseFromCodedStream(&coded_input);
-
+         file.write(buf, n);
+     }
     return true;
 }
+
+
+bool Client::getProto(char *request, transit_realtime::FeedMessage * message){
+    // SEND REQUEST
+    if(send(sock, request, strlen(request), 0) != strlen(request))
+        die("send HTTP request failed");
+
+    // Wrap socket
+    FILE *fp = fdopen(sock, "r");
+    if (!fp)
+        die("fdopen failed");
+
+    // READ HEADERS
+    char buffer[1000];
+    while(fgets(buffer, sizeof(buffer), fp) != NULL && buffer[0] != '\r'){
+        std::cout << buffer;
+    }
+    std::cout << std::endl;
+
+    // WRITE RESPONSE TO FILE
+    //TODO: Nicolo writes trashy code. fix it! 
+
+    uint32_t siz = 4000;
+    char buf[siz];
+    size_t n;
+
+    n = fread(buf, 1, sizeof(buf), fp);
+    printf("%d\n", (int)n);
+    siz = n;
+    std::string s(buf,n );
+    message -> ParseFromString(s);
+    return true;
+}
+
 
 bool Client::teardown(){
     return close(sock); 

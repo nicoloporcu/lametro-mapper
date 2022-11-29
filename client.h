@@ -8,9 +8,9 @@ class Client{
         ~Client() = default;
         bool getGeneralInfo();
         bool getRoutesInfo();
-        bool getVehiclePositionsGTFS(bool human);
-        bool getTripUpdatesGTFS(bool human);
-        bool getAlertsGTFS(bool human);
+        bool getVehiclePositionsGTFS(bool human, transit_realtime::FeedMessage * message);
+        bool getTripUpdatesGTFS(bool human, transit_realtime::FeedMessage * message);
+        bool getAlertsGTFS(bool human, transit_realtime::FeedMessage * message);
     
     private:
         std::string serverName;
@@ -20,6 +20,7 @@ class Client{
         int sock;
 
         bool get(char *request);
+        bool getProto(char *request, transit_realtime::FeedMessage * message);
         bool init();
         bool teardown();
 };
